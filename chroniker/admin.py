@@ -16,7 +16,7 @@ from django.utils.html import format_html
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
-from chroniker.models import Job, Log, JobDependency, Monitor
+from chroniker.models import Job, Log, JobDependency, Monitor, CallbackMethod
 from chroniker import utils
 from chroniker.widgets import ImproveRawIdFieldsFormTabularInline
 
@@ -25,6 +25,10 @@ try:
 except ImportError:
     ApproxCountQuerySet = None
 
+class CallbackMethodAdmin(admin.ModelAdmin):
+    list_display = ('name', 'reference')
+
+admin.site.register(CallbackMethod, CallbackMethodAdmin)
 
 class JobDependencyInline(ImproveRawIdFieldsFormTabularInline):
     model = JobDependency
@@ -106,7 +110,7 @@ class JobAdmin(admin.ModelAdmin):
         'hostname',
         'is_monitor',
     )
-    filter_horizontal = ('subscribers',)
+    filter_horizontal = ('subscribers','callbacks')
     fieldsets = (
         ('Job Details', {
             'classes': ('wide',),
@@ -171,6 +175,14 @@ class JobAdmin(admin.ModelAdmin):
                 'subscribers',
                 'email_errors_to_subscribers',
                 'email_success_to_subscribers',
+            )
+        }),
+        ('Callbacks', {
+            'classes': ('wide',),
+            'fields': (
+                'callbacks',
+                'callback_errors_to_subscribers',
+                'callback_success_to_subscribers',
             )
         }),
         ('Frequency options', {

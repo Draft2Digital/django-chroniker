@@ -407,6 +407,15 @@ class JobManager(models.Manager):
             create_log(job)
             #transaction.commit()
 
+class CallbackMethod(models.Model):
+
+    def __str__(self):
+        return self.name
+
+    objects = JobManager()
+
+    name = models.CharField(_("name"), max_length=200)
+    reference = models.CharField(_("reference"), max_length=200)
 
 class Job(models.Model):
     """
@@ -463,6 +472,18 @@ class Job(models.Model):
     )
 
     last_run_successful = models.BooleanField(_('success'), blank=True, null=True, editable=False)
+
+    callbacks = models.ManyToManyField(CallbackMethod, related_name='callbacked_jobs', blank=True)
+
+    callback_errors_to_subscribers = models.BooleanField(
+        default=True,
+        help_text=_('If checked, the stdout and stderr of a job will ' + \
+            'be sent to the callback if an error occur.'))
+
+    callback_success_to_subscribers = models.BooleanField(
+        default=False,
+        help_text=_('If checked, the stdout of a job will ' + \
+            'be sent to the callback if not errors occur.'))
 
     subscribers = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='subscribed_jobs', blank=True, limit_choices_to={'is_staff': True})
 
@@ -1119,11 +1140,24 @@ class Job(models.Model):
                 print('Error emailing subscribers: %s' % e, file=sys.stderr)
                 traceback.print_exc()
 
+            # Call successful callback.
+            try:
+                if self.callback_success_to_subscribers:
+                    if last_run_successful and job.callbacks.all():
+                        for callback in job.callbacks.all():
+                            cb = import_string(callback.reference)
+                            cb(self, stdout=stdout_str, stderr=stderr_str)
+            except Exception as e:
+                print('Error executing callback: %s' % e, file=sys.stderr)
+                traceback.print_exc()
+
             # Call error callback.
             try:
-                if not last_run_successful and _settings.CHRONIKER_JOB_ERROR_CALLBACK:
-                    cb = import_string(_settings.CHRONIKER_JOB_ERROR_CALLBACK)
-                    cb(self, stdout=stdout_str, stderr=stderr_str)
+                if self.callback_errors_to_subscribers:
+                    if not last_run_successful and job.callbacks.all():
+                        for callback in job.callbacks.all():
+                            cb = import_string(callback.reference)
+                            cb(self, stdout=stdout_str, stderr=stderr_str)
             except Exception as e:
                 print('Error executing callback: %s' % e, file=sys.stderr)
                 traceback.print_exc()
