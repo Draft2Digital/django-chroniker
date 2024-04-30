@@ -4,8 +4,6 @@ Quick run with:
     export TESTNAME=.testJobRawCommand; tox -e py37-django21
 
 """
-from __future__ import print_function
-
 import os
 import socket
 import sys
@@ -16,13 +14,8 @@ from datetime import datetime, timedelta
 from multiprocessing import Process
 
 from dateutil import zoneinfo
-import pytz
 
-try:
-    from io import BytesIO, StringIO
-except ImportError:
-    from cStringIO import StringIO
-    from cStringIO import StringIO as BytesIO
+from io import BytesIO, StringIO
 
 import django
 from django.conf import settings
@@ -35,7 +28,7 @@ from django.test.client import Client
 from django.utils import timezone
 
 from chroniker import constants as c, settings as _settings, utils
-from chroniker.models import Job, Log
+from chroniker.models import Job, Log, CallbackMethod
 
 warnings.simplefilter('error', RuntimeWarning)
 
@@ -481,7 +474,15 @@ class JobTestCase(TestCase):
         job.frequency = c.MINUTELY
         job.force_run = True
         job.enabled = True
+        job.callback_errors_to_subscribers = True
         job.save()
+
+        cb = CallbackMethod.objects.create(
+            name='job_error_callback',
+            reference='chroniker.tests.tests.job_error_callback',
+        )
+        job.callbacks.add(cb)
+        job.subscribers.add(self.get_superuser())
 
         self.assertEqual(job.logs.all().count(), 0)
         #job.run(update_heartbeat=0)
@@ -572,13 +573,13 @@ class JobTestCase(TestCase):
         )
         self.assertEqual(job.logs.all().count(), 0)
         self.assertTrue(job.next_run)
-        next_run0 = job.next_run.astimezone(pytz.utc)
+        next_run0 = job.next_run.astimezone(zoneinfo.gettz("UTC"))
         print('next_run0:', next_run0)
         self.assertTrue(timezone.is_aware(next_run0))
         self.assertEqual(next_run0.tzname(), 'UTC')
 
         # Initial next_run should be one-hour from now.
-        td = next_run0 - timezone.now().astimezone(pytz.utc)
+        td = next_run0 - timezone.now().astimezone(zoneinfo.gettz("UTC"))
         print('td:', td)
         result = abs(td.total_seconds() - 3600)
         self.assertTrue(result <= 5, result)
@@ -595,9 +596,9 @@ class JobTestCase(TestCase):
         self.assertEqual(job.force_run, False)
         self.assertTrue(job.next_run)
         self.assertEqual(job.logs.all().count(), 1)
-        next_run1 = job.next_run.astimezone(pytz.utc)
+        next_run1 = job.next_run.astimezone(zoneinfo.gettz("UTC"))
         print('next_run1:', next_run1)
-        print('now:', timezone.now().astimezone(pytz.utc))
+        print('now:', timezone.now().astimezone(zoneinfo.gettz("UTC")))
         self.assertTrue(timezone.is_aware(next_run1))
         # All datetimes get normalized to UTC in the database.
         self.assertEqual(next_run1.tzname(), 'UTC')
@@ -617,11 +618,11 @@ class JobTestCase(TestCase):
         Job.objects.update()
         job = Job.objects.get(id=job.id)
         self.assertEqual(job.logs.all().count(), 2)
-        next_run2 = job.next_run.astimezone(pytz.utc)
+        next_run2 = job.next_run.astimezone(zoneinfo.gettz("UTC"))
         print('next_run0:', next_run0)
         print('next_run2:', next_run2)
         #self.assertTrue(td.total_seconds())
-        td2 = (next_run2 - timezone.now().astimezone(pytz.utc))
+        td2 = (next_run2 - timezone.now().astimezone(zoneinfo.gettz("UTC")))
         print('td2:', td2)
         self.assertTrue(abs(td2.total_seconds() - 3600) <= 5)
 
