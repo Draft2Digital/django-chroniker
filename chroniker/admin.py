@@ -7,7 +7,7 @@ from django.urls import reverse, NoReverseMatch
 from django.db import models
 from django.forms import TextInput
 from django.shortcuts import render
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.http import HttpResponseRedirect, Http404, HttpResponse
 from django.utils import dateformat, timezone
 from django.utils.datastructures import MultiValueDict
@@ -373,7 +373,7 @@ class JobAdmin(admin.ModelAdmin):
         media = self.media
 
         context = {
-            'title': _('Change %s') % force_text(opts.verbose_name),
+            'title': _('Change %s') % force_str(opts.verbose_name),
             'object_id': object_id,
             'original': obj,
             'is_popup': False,

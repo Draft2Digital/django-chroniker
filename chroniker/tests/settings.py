@@ -65,8 +65,6 @@ MIDDLEWARE_CLASSES = MIDDLEWARE = (
     'django.middleware.locale.LocaleMiddleware',
 )
 
-CHRONIKER_JOB_ERROR_CALLBACK = 'chroniker.tests.tests.job_error_callback'
-
 # Required in Django>=1.10.
 TEMPLATES = [
     {
@@ -96,3 +94,4 @@ TEMPLATES = [
         },
     },
 ]
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
