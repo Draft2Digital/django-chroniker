@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "django-chroniker"
 dynamic = ["version"]
 description = "Easily control cron jobs via Django's admin."
 readme = "README.md"
-license = { text = "BSD" }
+license = "BSD-3-Clause"
 authors = [
     { name = "Chris Spencer", email = "chrisspen@gmail.com" },
     { name = "Draft2Digital", email = "chrisspen@gmail.com" }
@@ -16,21 +16,16 @@ classifiers = [
     "Development Status :: 6 - Mature",
     "Environment :: Web Environment",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: OS Independent",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.4",
-    "Programming Language :: Python :: 3.5",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Framework :: Django"
 ]
-requires-python = ">=3.4"
+requires-python = ">=3.10"
 dependencies = [
     "python-dateutil>=2.2",
     "psutil>=2.1.1",
     "toposort>=1.0",
-    "Django>=2.2"
+    "Django>=4.2"
 ]
 
 [project.urls]
@@ -38,8 +33,7 @@ Homepage = "https://github.com/draft2digital/django-chroniker"
 
 [project.optional-dependencies]
 tests = [
-    "tox>=2.0.0",
-    "django-admin-steroids>=0.4.0",
+    "tox>=4.2.0",
 ]
 
 [tool.setuptools.package-data]
