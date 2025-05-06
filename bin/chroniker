@@ -108,7 +108,7 @@ if __name__ == "__main__":
             if extra_path == '..':
                 sys.stderr.write("Error: Could not find Django settings\n")
                 sys.stderr.write(str(e))
-                sys.stderr.write(str('\n'))
+                sys.stderr.write('\n')
                 sys.exit(0)
 
     call_command('cron', jobs=jobs)

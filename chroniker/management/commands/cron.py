@@ -129,7 +129,7 @@ def run_cron(jobs=None, **kwargs):
                 pass
             elif os.path.isfile(pid_fn):
                 try:
-                    old_pid = int(open(pid_fn, 'r').read())
+                    old_pid = int(open(pid_fn).read())
                     if utils.pid_exists(old_pid):
                         print('%s already exists, exiting' % pid_fn)
                         sys.exit()
@@ -167,13 +167,13 @@ def run_cron(jobs=None, **kwargs):
             Job.objects.update()
             job = Job.objects.get(id=job.id)
             if not force_run and not job.is_due_with_dependencies_met(running_ids=running_ids):
-                utils.smart_print(u'Job {} {} is due but has unmet dependencies.'\
+                utils.smart_print('Job {} {} is due but has unmet dependencies.'\
                     .format(job.id, job))
                 continue
 
             # Immediately mark the job as running so the next jobs can
             # update their dependency check.
-            utils.smart_print(u'Running job {} {}.'.format(job.id, job))
+            utils.smart_print(f'Running job {job.id} {job}.')
             running_ids.add(job.id)
             if dryrun:
                 continue
