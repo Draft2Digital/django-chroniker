@@ -8,7 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .idea/
-bin/
+# bin/
 build/
 develop-eggs/
 dist/

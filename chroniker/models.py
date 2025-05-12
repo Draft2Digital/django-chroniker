@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import logging
 import os
 import shlex
@@ -242,7 +240,7 @@ class JobDependency(models.Model):
 class JobManager(models.Manager):
 
     def get_by_natural_key(self, *args):
-        kwargs = dict((_name, _value) for _name, _value in zip(_settings.CHRONIKER_JOB_NK, args))
+        kwargs = {_name: _value for _name, _value in zip(_settings.CHRONIKER_JOB_NK, args)}
         return self.get(**kwargs)
 
     def due(self, job=None, check_running=True):
@@ -330,7 +328,7 @@ class JobManager(models.Manager):
         Returns a list of jobs sorted by dependency, with dependents after
         all their dependees.
         """
-        data = dict((j.id, set(_.dependee.id for _ in j.dependencies.all())) for j in self.due_with_met_dependencies(jobs=jobs))
+        data = {j.id: {_.dependee.id for _ in j.dependencies.all()} for j in self.due_with_met_dependencies(jobs=jobs)}
         lst = toposort_flatten(data)
         lst = [Job.objects.get(id=_) for _ in lst]
         return lst
@@ -340,7 +338,7 @@ class JobManager(models.Manager):
         Orders the given jobs so that all dependents are ordered after their dependencies.
         """
         jobs = jobs or []
-        data = dict((j.id, set(_.dependee.id for _ in j.dependencies.all())) for j in jobs)
+        data = {j.id: {_.dependee.id for _ in j.dependencies.all()} for j in jobs}
         lst = toposort_flatten(data)
         lst = [Job.objects.get(id=_) for _ in lst]
         return lst
@@ -371,13 +369,13 @@ class JobManager(models.Manager):
             # appears inactive, then attempt to forcibly kill the job.
             if job.current_pid and job.current_hostname and job.current_hostname == socket.gethostname():
                 if utils.pid_exists(job.current_pid):
-                    print('Killing process {}...'.format(job.current_pid))
+                    print(f'Killing process {job.current_pid}...')
                     utils.kill_process(job.current_pid)
                     #TODO:record log entry
                 else:
-                    print('Process with PID {} is not running.'.format(job.current_pid))
+                    print(f'Process with PID {job.current_pid} is not running.')
             else:
-                print('Process with PID {} is not elligible for killing.'.format(job.current_pid))
+                print(f'Process with PID {job.current_pid} is not elligible for killing.')
 
             job.is_running = False
             job.last_run_successful = False
@@ -397,9 +395,9 @@ class JobManager(models.Manager):
 
         q = self.stale()
         total = q.count()
-        print('{} total stale jobs.'.format(total))
+        print(f'{total} total stale jobs.')
         for job in q.iterator():
-            print('Checking stale job {}: {}'.format(job.id, job))
+            print(f'Checking stale job {job.id}: {job}')
 
             kill_job(job)
             #transaction.commit()
@@ -563,9 +561,9 @@ class Job(models.Model):
 
     def __unicode__(self):
         if self.enabled:
-            ret = u"{} - {} - {}".format(self.id, self.name, self.timeuntil)
+            ret = f"{self.id} - {self.name} - {self.timeuntil}"
         else:
-            ret = u"{id} - {name} - disabled".format(**{'name': self.name, 'id': self.id})
+            ret = "{id} - {name} - disabled".format(**{'name': self.name, 'id': self.id})
         if not isinstance(ret, str):
             ret = str(ret)
         return ret
@@ -618,7 +616,7 @@ class Job(models.Model):
         Returns a list of jobs that depend on this job.
         Retrieves jobs recursively, stopping if it detects cycles.
         """
-        priors = set([self.id])
+        priors = {self.id}
         pending = list(self.dependents.all()\
             .filter(dependent__enabled=True, wait_for_completion=True)\
             .values_list('dependent_id', flat=True))
@@ -930,11 +928,11 @@ class Job(models.Model):
         if self.enabled:
             if not self.dependencies_met():
                 # Note, this will cause the job to be re-checked the next time cron runs.
-                print('Job "{}" has unmet dependencies. Aborting run.'.format(self.name))
+                print(f'Job "{self.name}" has unmet dependencies. Aborting run.')
             elif check_running and self.check_is_running():
-                print('Job "{}" already running. Aborting run.'.format(self.name))
+                print(f'Job "{self.name}" already running. Aborting run.')
             elif not self.is_due(check_running=check_running):
-                print('Job "{}" not due. Aborting run.'.format(self.name))
+                print(f'Job "{self.name}" not due. Aborting run.')
             else:
                 self.handle_run(*args, **kwargs)
                 return True
@@ -1016,7 +1014,7 @@ class Job(models.Model):
                 logger.debug("Calling command '%s'", self.command)
                 if self.raw_command and not getattr(settings, 'CHRONIKER_DISABLE_RAW_COMMAND', False):
                     completed_process = subprocess.run(
-                        shlex.split(self.raw_command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, universal_newlines=True
+                        shlex.split(self.raw_command), capture_output=True, check=True, text=True
                     )
                     _stdout_str = completed_process.stdout
                     _stderr_str = completed_process.stderr
@@ -1051,7 +1049,7 @@ class Job(models.Model):
             # next_run = self.next_run.replace(tzinfo=None)
             next_run = self.next_run
             if not self.force_run:
-                print("Determining 'next_run' for job {}...".format(self.id))
+                print(f"Determining 'next_run' for job {self.id}...")
                 if next_run < timezone.now():
                     next_run = timezone.now()
                 _next_run = next_run

@@ -1,6 +1,41 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
 repos:
--   repo: https://github.com/pre-commit/mirrors-yapf
-    rev: v0.30.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
-    -   id: yapf
-        args: [--in-place, --parallel, --recursive]
+      - id: check-toml
+      - id: check-yaml
+      - id: debug-statements
+      - id: check-case-conflict
+      - id: check-docstring-first
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: destroyed-symlinks
+      - id: detect-private-key
+      - id: no-commit-to-branch
+
+  - repo: https://github.com/abravalheri/validate-pyproject
+    rev: v0.24.1
+    hooks:
+      - id: validate-pyproject
+        # Optional extra validations from SchemaStore:
+        additional_dependencies: [
+          "validate-pyproject-schema-store[all]",
+          "tomli",
+          "packaging",
+          "trove-classifiers",
+        ]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.19.1
+    hooks:
+    - id: pyupgrade
+      args: ['--py310-plus', '--keep-percent-format']
+      additional_dependencies: ['tomli']
+
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: '1.24.0'
+    hooks:
+      - id: django-upgrade
+        args: ['--target-version', '4.2']

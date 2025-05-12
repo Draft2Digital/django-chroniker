@@ -22,7 +22,6 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'chroniker',
     'chroniker.tests',
-    'admin_steroids',
 ]
 
 SKIP_SMOKE_TESTS = ('chroniker_job_add',)

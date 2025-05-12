@@ -185,14 +185,14 @@ class JobTestCase(TestCase):
         self.assertEqual(j4.is_due(), True)
         self.assertEqual(j5.is_due(), False)
 
-        self.assertEqual(set(_.dependent for _ in j1.dependents.all()), set([j2]))
+        self.assertEqual({_.dependent for _ in j1.dependents.all()}, {j2})
         self.assertEqual(j1.dependents.filter(dependent=j2).count(), 1)
 
-        self.assertEqual(set(_.dependee for _ in j1.dependencies.all()), set([]))
+        self.assertEqual({_.dependee for _ in j1.dependencies.all()}, set())
 
-        self.assertEqual(set(_.dependent for _ in j2.dependents.all()), set([]))
+        self.assertEqual({_.dependent for _ in j2.dependents.all()}, set())
 
-        self.assertEqual(set(_.dependee for _ in j2.dependencies.all()), set([j1, j3]))
+        self.assertEqual({_.dependee for _ in j2.dependencies.all()}, {j1, j3})
         self.assertEqual(j2.dependencies.filter(dependee=j1).count(), 1)
         self.assertEqual(j2.dependencies.filter(dependee=j3).count(), 1)
 
