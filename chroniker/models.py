@@ -745,7 +745,7 @@ class Job(models.Model):
             log_q = self.logs.all().order_by('-run_start_datetime')[cutoff:]
             if log_q.exists():
                 cutoff_dt = log_q[0].run_start_datetime
-                qs = Log.objects.filter(run_start_datetime__lte=cutoff_dt)
+                qs = self.logs.all().filter(run_start_datetime__lte=cutoff_dt)
                 for o in qs:
                     o.delete()
 
